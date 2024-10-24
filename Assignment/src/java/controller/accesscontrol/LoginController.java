@@ -18,29 +18,23 @@ import java.io.IOException;
  */
 public class LoginController extends HttpServlet {
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String user = req.getParameter("username");
-        String pass = req.getParameter("password");
-        
-        UserDBContext db = new UserDBContext();
-        User account = db.get(user, pass);
-        
-        if(account!=null)
-        {
-            req.getSession().setAttribute("account", account);
-            
-            resp.getWriter().println("login successful!");
-        }
-        else
-        {
-            resp.getWriter().println("login failed!");
-        }
-        
-        String url = this.getInitParameter("url");
-        resp.getWriter().println(url);
-        
+   @Override
+protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    String user = req.getParameter("username");
+    String pass = req.getParameter("password");
+
+    UserDBContext db = new UserDBContext();
+    User account = db.get(user, pass);
+
+    if (account != null) {
+        req.getSession().setAttribute("account", account);
+        resp.sendRedirect("productionplan/home");
+    } else {
+        // Đăng nhập thất bại, thêm tham số lỗi vào URL
+        resp.sendRedirect("login.html?error=1");
     }
+}
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

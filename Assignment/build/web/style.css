@@ -1,0 +1,106 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Oct 24, 2024, 3:22:50 PM
+    Author     : ASUS
+*/
+
+/* Đặt nền cho toàn bộ trang */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: url('background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Hộp đăng nhập với hiệu ứng glassy */
+.login-box {
+    width: 400px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    color: #fff;
+    text-align: center;
+}
+
+.login-box h2 {
+    margin: 0 0 30px;
+    font-size: 24px;
+    color: #fff;
+}
+
+/* Định dạng textbox */
+.textbox {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.textbox input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 18px;
+    border-radius: 4px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.textbox .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 10px;
+    color: #fff;
+}
+
+/* Định dạng cho nút login */
+.btn {
+    width: 100%;
+    background: #03a9f4;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 18px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.btn:hover {
+    background: #0288d1;
+}
+
+/* Các lựa chọn Remember Me và Forgot Password */
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    color: #fff;
+}
+
+.forgot {
+    color: #fff;
+    text-decoration: none;
+}
+
+.forgot:hover {
+    text-decoration: underline;
+}
+
+/* Lỗi khi đăng nhập */
+#errorMessage {
+    color: red;
+    margin-top: 10px;
+}
