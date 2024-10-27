@@ -53,12 +53,12 @@ public class DepartmentDBContext extends DBContext<Department> {
         } catch (SQLException ex) {
             Logger.getLogger(dal.DepartmentDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            try {
-                command.close();
-                connection.close();
-            } catch (SQLException ex) {
-                Logger.getLogger(dal.DepartmentDBContext.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                command.close();
+//                connection.close();
+//            } catch (SQLException ex) {
+//                Logger.getLogger(dal.DepartmentDBContext.class.getName()).log(Level.SEVERE, null, ex);
+//            }
         }
         return depts;
     }
@@ -86,12 +86,12 @@ public class DepartmentDBContext extends DBContext<Department> {
         } catch (SQLException ex) {
             Logger.getLogger(dal.DepartmentDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            try {
-                command.close();
-                connection.close();
-            } catch (SQLException ex) {
-                Logger.getLogger(dal.DepartmentDBContext.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                command.close();
+//                connection.close();
+//            } catch (SQLException ex) {
+//                Logger.getLogger(dal.DepartmentDBContext.class.getName()).log(Level.SEVERE, null, ex);
+//            }
         }
         return depts;
     }

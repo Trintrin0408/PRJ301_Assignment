@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package entity;
+
 import java.sql.Date;
 import java.util.ArrayList;
 
@@ -11,11 +12,13 @@ import java.util.ArrayList;
  * @author sonnt-local
  */
 public class Plan {
+
     private int id;
     private String name;
     private Date start;
     private Date end;
     private Department dept;
+    private String status;
     private ArrayList<PlanCampain> campains = new ArrayList<>();
 
     public ArrayList<PlanCampain> getCampains() {
@@ -24,6 +27,14 @@ public class Plan {
 
     public void setCampains(ArrayList<PlanCampain> campains) {
         this.campains = campains;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public int getId() {
@@ -65,5 +76,5 @@ public class Plan {
     public void setDept(Department dept) {
         this.dept = dept;
     }
-    
+
 }

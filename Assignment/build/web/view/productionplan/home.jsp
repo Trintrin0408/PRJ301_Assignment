@@ -127,12 +127,12 @@
             <hr> <!-- Added HR between the header and the board -->
             <div class="boards">
                 <!-- Board item 1 -->
-                <div class="board" onclick="window.location.href='/plan';">
+                <div class="board" onclick="window.location.href='plan';">
                     <img src="../view/img/space1.jpg" alt="Plan">
                     <a>Plan</a>
                 </div>
                 <!-- Board item 2 -->
-                <div class="board" onclick="window.location.href='/detailplan';">
+                <div class="board" onclick="window.location.href='detailplan';">
                     <img src="../view/img/images.jpg" alt="Detail Plan">
                     <a>Detail Plan</a>
                 </div>

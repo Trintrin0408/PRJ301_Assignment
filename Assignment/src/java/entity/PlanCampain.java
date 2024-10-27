@@ -4,16 +4,28 @@
  */
 package entity;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author sonnt-local
  */
 public class PlanCampain {
+
     private int id;
     private Plan plan;
     private Product product;
     private int quantity;
     private float cost;
+    private ArrayList<SchedualCampain> schedualCampains = new ArrayList<>();
+
+    public ArrayList<SchedualCampain> getSchedualCampains() {
+        return schedualCampains;
+    }
+
+    public void setSchedualCampains(ArrayList<SchedualCampain> schedualCampains) {
+        this.schedualCampains = schedualCampains;
+    }
 
     public int getId() {
         return id;
@@ -54,5 +66,5 @@ public class PlanCampain {
     public void setCost(float cost) {
         this.cost = cost;
     }
-    
+
 }
