@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+import java.util.Comparator;
 import java.util.logging.Logger;
 
 /**
@@ -30,13 +31,17 @@ public class PlanDBContext extends DBContext<Plan> {
         try {
             connection.setAutoCommit(false);
 
-            String sql_insert_plan = "INSERT INTO [Plan]\n"
-                    + "           ([PlanName]\n"
+            String sql_insert_plan = "INSERT INTO [dbo].[Plan]\n"
+                    + "           ([PlanID]\n"
+                    + "           ,[PlanName]\n"
                     + "           ,[StartDate]\n"
                     + "           ,[EndDate]\n"
-                    + "           ,[DepartmentID])\n"
+                    + "           ,[DepartmentID]\n"
+                    + "           ,[Status])\n"
                     + "     VALUES\n"
                     + "           (?\n"
+                    + "           ,?\n"
+                    + "           ,?\n"
                     + "           ,?\n"
                     + "           ,?\n"
                     + "           ,?)";
@@ -45,6 +50,7 @@ public class PlanDBContext extends DBContext<Plan> {
             stm_insert_plan.setDate(2, entity.getStart());
             stm_insert_plan.setDate(3, entity.getEnd());
             stm_insert_plan.setInt(4, entity.getDept().getId());
+            stm_insert_plan.setString(5, entity.getStatus());
             stm_insert_plan.executeUpdate();
 
             String sql_select_plan = "SELECT @@IDENTITY as PlanID";
@@ -107,88 +113,110 @@ public class PlanDBContext extends DBContext<Plan> {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-  
     public ArrayList<Plan> list() {
         ArrayList<Plan> plans = new ArrayList<>();
         PreparedStatement command = null;
         ResultSet resultSet = null;
         PlanDBContext db = new PlanDBContext();
         try {
-            String sql = "SELECT [dbo].[Plan].[PlanID], [PlanName], [StartDate], [EndDate], \n"
-                    + "                    [dbo].[Department].[DepartmentID], [DepartmentName], [Status], \n"
-                    + "                    [dbo].[PlanCampain].[PlanCampnID], [dbo].[PlanCampain].[ProductID], \n"
-                    + "                    [ProductName], [dbo].[PlanCampain].Quantity AS PlanCampainQuantity, \n"
-                    + "                    [ScID], [dbo].[SchedualCampaign].Quantity AS SchedualCampaignQuantity, \n"
-                    + "                    [dbo].[SchedualCampaign].[Date], [dbo].[SchedualCampaign].[Shift] \n"
-                    + "                    FROM [dbo].[Plan] \n"
-                    + "                    JOIN [dbo].[PlanCampain] ON [dbo].[Plan].[PlanID] = [dbo].[PlanCampain].[PlanID] \n"
-                    + "                    JOIN [dbo].[Product] ON [dbo].[Product].ProductID = [dbo].[PlanCampain].ProductID \n"
-                    + "                    JOIN [dbo].[Department] ON [dbo].[Department].DepartmentID = [dbo].[Plan].DepartmentID \n"
-                    + "                    JOIN [dbo].[SchedualCampaign] ON [dbo].[SchedualCampaign].PlanCampnID = [dbo].[PlanCampain].PlanCampnID";
-            
-       
+            String sql = "SELECT [dbo].[Plan].[PlanID], [PlanName], [StartDate], [EndDate], "
+                    + "[dbo].[Department].[DepartmentID], [DepartmentName], [Status], "
+                    + "[dbo].[PlanCampain].[PlanCampnID], [dbo].[PlanCampain].[ProductID], "
+                    + "[ProductName], [dbo].[PlanCampain].Quantity AS PlanCampainQuantity, "
+                    + "[ScID], [dbo].[SchedualCampaign].Quantity AS SchedualCampaignQuantity, "
+                    + "[dbo].[SchedualCampaign].[Date], [dbo].[SchedualCampaign].[Shift] "
+                    + "FROM [dbo].[Plan] "
+                    + "JOIN [dbo].[PlanCampain] ON [dbo].[Plan].[PlanID] = [dbo].[PlanCampain].[PlanID] "
+                    + "JOIN [dbo].[Product] ON [dbo].[Product].ProductID = [dbo].[PlanCampain].ProductID "
+                    + "JOIN [dbo].[Department] ON [dbo].[Department].DepartmentID = [dbo].[Plan].DepartmentID "
+                    + "JOIN [dbo].[SchedualCampaign] ON [dbo].[SchedualCampaign].PlanCampnID = [dbo].[PlanCampain].PlanCampnID "
+                    + "ORDER BY [dbo].[SchedualCampaign].[Date] ASC"; // Đảm bảo sắp xếp theo ngày ở đây
+
             command = connection.prepareStatement(sql);
             resultSet = command.executeQuery();
+
             while (resultSet.next()) {
-                Plan plan = new Plan();
-                plan.setId(resultSet.getInt("PlanID"));
-                plan.setName(resultSet.getString("PlanName"));
-                plan.setStart(resultSet.getDate("StartDate"));
-                plan.setEnd(resultSet.getDate("EndDate"));
+                int planID = resultSet.getInt("PlanID");
 
-                Department department = new Department();
-                department.setId(resultSet.getInt("DepartmentID"));
-                department.setName(resultSet.getString("DepartmentName"));
-                plan.setDept(department);
+                // Check if the plan already exists in the plans list
+                Plan plan = plans.stream()
+                        .filter(p -> p.getId() == planID)
+                        .findFirst()
+                        .orElse(null);
+                if (plan == null) {
+                    // Create a new plan if it doesn't exist in the list
+                    plan = new Plan();
+                    plan.setId(planID);
+                    plan.setName(resultSet.getString("PlanName"));
+                    plan.setStart(resultSet.getDate("StartDate"));
+                    plan.setEnd(resultSet.getDate("EndDate"));
 
-                plan.setStatus(resultSet.getString("Status"));
+                    Department department = new Department();
+                    department.setId(resultSet.getInt("DepartmentID"));
+                    department.setName(resultSet.getString("DepartmentName"));
+                    plan.setDept(department);
 
-                
-                ArrayList<PlanCampain> planCampains = new ArrayList<>();
-                PlanCampain planCampain = new PlanCampain();
-                planCampain.setId(resultSet.getInt("PlanCampnID"));
-                planCampain.setId(resultSet.getInt("ProductID"));
-                planCampain.setQuantity(resultSet.getInt("PlanCampainQuantity"));
+                    plan.setStatus(resultSet.getString("Status"));
+                    plan.setCampains(new ArrayList<>()); // Initialize the campains list
+                    plans.add(plan);
+                }
 
-                Product product = new Product();
-                product.setId(resultSet.getInt("ProductID"));
-                product.setName(resultSet.getString("ProductName"));
-                planCampain.setProduct(product);
+                int planCampnID = resultSet.getInt("PlanCampnID");
 
-                ArrayList<SchedualCampain> schedualCampains = new ArrayList<>();
+                // Check if the PlanCampain already exists in the plan's campains
+                PlanCampain planCampain = plan.getCampains().stream()
+                        .filter(pc -> pc.getId() == planCampnID)
+                        .findFirst()
+                        .orElse(null);
+                if (planCampain == null) {
+                    // Create PlanCampain and add to plan's campains
+                    planCampain = new PlanCampain();
+                    planCampain.setId(planCampnID);
+                    planCampain.setQuantity(resultSet.getInt("PlanCampainQuantity"));
+
+                    Product product = new Product();
+                    product.setId(resultSet.getInt("ProductID"));
+                    product.setName(resultSet.getString("ProductName"));
+                    planCampain.setProduct(product);
+
+                    planCampain.setSchedualCampains(new ArrayList<>()); // Initialize schedualCampains list
+
+                    plan.getCampains().add(planCampain);
+                }
+
+                // Create SchedualCampain
                 SchedualCampain schedualCampain = new SchedualCampain();
                 schedualCampain.setId(resultSet.getInt("ScID"));
                 schedualCampain.setQuantity(resultSet.getInt("SchedualCampaignQuantity"));
                 schedualCampain.setDate(resultSet.getDate("Date"));
                 schedualCampain.setShift(resultSet.getString("Shift"));
-                schedualCampains.add(schedualCampain);
 
-                planCampain.setSchedualCampains(schedualCampains);
-                planCampains.add(planCampain);
-                plan.setCampains(planCampains);
-                plans.add(plan);
+                // Add SchedualCampain to the existing PlanCampain
+                planCampain.getSchedualCampains().add(schedualCampain);
             }
+
+            // **Sắp xếp các schedualCampains trong mỗi planCampain theo ngày**
+            // Sau khi sắp xếp các schedualCampains trong mỗi planCampain theo ngày
+            for (Plan plan : plans) {
+                for (PlanCampain campain : plan.getCampains()) {
+                    campain.getSchedualCampains().sort(Comparator.comparing(SchedualCampain::getDate));
+
+                    // Debug: In ra thứ tự của các SchedualCampain để kiểm tra
+                    System.out.println("Plan ID: " + plan.getId());
+                    System.out.println("PlanCampain ID: " + campain.getId());
+                    for (SchedualCampain schedual : campain.getSchedualCampains()) {
+                        System.out.println("Date: " + schedual.getDate() + " | Shift: " + schedual.getShift());
+                    }
+                }
+            }
+
         } catch (SQLException ex) {
             ex.printStackTrace();
         } finally {
-//            if (resultSet != null) {
-//                try {
-//                    resultSet.close();
-//                } catch (SQLException ex) {
-//                    ex.printStackTrace();
-//                }
-//            }
-//            if (command != null) {
-//                try {
-//                    command.close();
-//                } catch (SQLException ex) {
-//                    ex.printStackTrace();
-//                }
-//            }
+            // Clean up resources here if necessary
         }
         return plans;
     }
-
 
     public ArrayList<Plan> getPlansByStatus(String status) {
         Logger logger = Logger.getLogger(PlanDBContext.class.getName());

@@ -44,42 +44,93 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+        p{align-content: center;
+            text-align: center;}
     </style>
 </head>
 <body>
-<div class="container">
-    <h2>Production Detail Plan</h2>
-    <c:forEach var="plan" items="${plans}">
-        <div>
-            <h3>Plan: ${plan.name}</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Start Date</th>
-                        <th>Product ID</th>
-                        <th>Product Name</th>
-                        <th>Shift</th>
-                        <th>Quantity</th>
-                     
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach var="campain" items="${plan.campains}">
-                        <c:forEach var="schedual" items="${campain.schedualCampains}">
-                            <tr>
-                                <td>${plan.start}</td>
-                                <td>${campain.product.id}</td>
-                                <td>${campain.product.name}</td>
-                                <td>${schedual.shift}</td>
-                                <td>${campain.quantity}</td>
-                                
-                            </tr>
+    <div class="container">
+        <!-- Button Back -->
+        <button onclick="goBack()" style="margin-bottom: 20px;
+                                            background: #fff;
+                                            ">Back</button>
+        
+        <!-- Production Detail Plan Content -->
+        <h2>Production Detail Plan</h2>
+        <p>-----------------------------------------</p>
+        <c:forEach var="plan" items="${plans}">
+            <div>
+                <h3>Plan: ${plan.name}</h3>
+                <h4>Plan Id: ${plan.id}</h4>
+                <h4>Workshop: ${plan.dept.name}</h4>
+        
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product Name</th>
+                            <th colspan="3">Shift</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th>K1</th>
+                            <th>K2</th>
+                            <th>K3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="campain" items="${plan.campains}">
+                            <c:set var="lastDate" value="" />
+                            <c:forEach var="schedual" items="${campain.schedualCampains}">
+                                <c:if test="${schedual.date != lastDate}">
+                                    <c:set var="quantityK1" value="" />
+                                    <c:set var="quantityK2" value="" />
+                                    <c:set var="quantityK3" value="" />
+                                    <c:forEach var="innerSchedual" items="${campain.schedualCampains}">
+                                        <c:if test="${innerSchedual.date == schedual.date}">
+                                            <c:choose>
+                                                <c:when test="${innerSchedual.shift == 1}">
+                                                    <c:set var="quantityK1" value="${innerSchedual.quantity}" />
+                                                </c:when>
+                                                <c:when test="${innerSchedual.shift == 2}">
+                                                    <c:set var="quantityK2" value="${innerSchedual.quantity}" />
+                                                </c:when>
+                                                <c:when test="${innerSchedual.shift == 3}">
+                                                    <c:set var="quantityK3" value="${innerSchedual.quantity}" />
+                                                </c:when>
+                                            </c:choose>
+                                        </c:if>
+                                    </c:forEach>
+                                    <tr>
+                                        <td>${schedual.date}</td>
+                                        <td>${campain.product.name}</td>
+                                        <td>${quantityK1}</td>
+                                        <td>${quantityK2}</td>
+                                        <td>${quantityK3}</td>
+                                    </tr>
+                                    <c:set var="lastDate" value="${schedual.date}" />
+                                </c:if>
+                            </c:forEach>
                         </c:forEach>
-                    </c:forEach>
-                </tbody>
-            </table>
-        </div>
-    </c:forEach>
-</div>
+                    </tbody>
+                </table>
+            </div>
+            <p>-----------------------------------------</p>
+        </c:forEach>
+    </div>
+
+    <!-- JavaScript Function to Go Back -->
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </body>
+
+
+
+
+
+
 </html>
