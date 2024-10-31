@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-
 public class ProductionPlan extends BaseRBACController {
 
     @Override
@@ -30,11 +29,11 @@ public class ProductionPlan extends BaseRBACController {
         req.setAttribute("planListDoing", planListDoing);
         req.setAttribute("planListDone", planListDone);
         req.setAttribute("planListLate", planListLate);
-Logger logger = Logger.getLogger(ProductionPlan.class.getName());
-logger.info("Plan List To Late: " + planListLate.size());
-for (Plan plan : planListToDo) {
-    logger.info("Plan Name (To Do): " + plan.getName());
-}
+        Logger logger = Logger.getLogger(ProductionPlan.class.getName());
+        logger.info("Plan List To Late: " + planListLate.size());
+        for (Plan plan : planListToDo) {
+            logger.info("Plan Name (To Do): " + plan.getName());
+        }
         resp.getWriter().println("login successful!");
         // Forward the request to the JSP (plan.jsp)
         req.getRequestDispatcher("../view/productionplan/plan.jsp").forward(req, resp);

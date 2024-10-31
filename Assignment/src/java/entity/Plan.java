@@ -77,4 +77,9 @@ public class Plan {
         this.dept = dept;
     }
 
+    @Override
+    public String toString() {
+        return "Plan{" + "id=" + id + ", name=" + name + ", start=" + start + ", end=" + end + ", dept=" + dept + ", status=" + status + ", campains=" + campains + '}';
+    }
+
 }

@@ -44,16 +44,15 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        p{align-content: center;
-            text-align: center;}
+        p {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Button Back -->
-        <button onclick="goBack()" style="margin-bottom: 20px;
-                                            background: #fff;
-                                            ">Back</button>
+        <button onclick="goBack()" style="margin-bottom: 20px; background: #fff;">Back</button>
         
         <!-- Production Detail Plan Content -->
         <h2>Production Detail Plan</h2>
@@ -103,11 +102,11 @@
                                         </c:if>
                                     </c:forEach>
                                     <tr>
-                                        <td>${schedual.date}</td>
-                                        <td>${campain.product.name}</td>
-                                        <td>${quantityK1}</td>
-                                        <td>${quantityK2}</td>
-                                        <td>${quantityK3}</td>
+                                        <td><input type="text" name="date" value="${schedual.date}" /></td>
+                                        <td><input type="text" name="productName" value="${campain.product.name}" /></td>
+                                        <td><input type="number" name="quantityK1" value="${quantityK1}" /></td>
+                                        <td><input type="number" name="quantityK2" value="${quantityK2}" /></td>
+                                        <td><input type="number" name="quantityK3" value="${quantityK3}" /></td>
                                     </tr>
                                     <c:set var="lastDate" value="${schedual.date}" />
                                 </c:if>
@@ -127,10 +126,4 @@
         }
     </script>
 </body>
-
-
-
-
-
-
 </html>

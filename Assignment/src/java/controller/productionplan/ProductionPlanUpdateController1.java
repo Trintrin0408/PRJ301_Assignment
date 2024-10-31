@@ -14,11 +14,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
-/**
- *
- * @author sonnt-local hand-some
- */
 public class ProductionPlanUpdateController1 extends BaseRBACController {
 
     @Override
@@ -43,7 +42,11 @@ public class ProductionPlanUpdateController1 extends BaseRBACController {
                 return;
             }
 
+            // Tính danh sách ngày từ start đến end
+            List<Date> dateList = getDateList(plan.getStart(), plan.getEnd());
+
             req.setAttribute("plan", plan);
+            req.setAttribute("dateList", dateList);  // truyền danh sách ngày vào request
             req.setAttribute("products", dbProduct.list());
             req.setAttribute("depts", dbDepts.get("WS")); // Chỉnh lại thành danh sách department
 
@@ -55,56 +58,61 @@ public class ProductionPlanUpdateController1 extends BaseRBACController {
 
     @Override
     protected void doAuthorizedPost(HttpServletRequest req, HttpServletResponse resp, User account) throws ServletException, IOException {
-        try {
-            Plan plan = new Plan();
-            plan.setId(Integer.parseInt(req.getParameter("id"))); // Gán lại ID của plan để cập nhật
-            plan.setName(req.getParameter("name"));
-            plan.setStart(Date.valueOf(req.getParameter("from")));
-            plan.setEnd(Date.valueOf(req.getParameter("to")));
+        String raw_id = req.getParameter("id");
+        String raw_name = req.getParameter("name");
+        String raw_from = req.getParameter("from");
+        String raw_to = req.getParameter("to");
+        String raw_did = req.getParameter("did");
 
-            // Thiết lập thông tin của Department
-            Department d = new Department();
-            d.setId(Integer.parseInt(req.getParameter("did")));
-            plan.setDept(d);
+        Plan plan = new Plan();
+        plan.setId(Integer.parseInt(raw_id));
+        plan.setName(raw_name);
+        plan.setStart(Date.valueOf(raw_from));
+        plan.setEnd(Date.valueOf(raw_to));
+        
+        Department dept = new Department();
+        dept.setId(Integer.parseInt(raw_did));
+        plan.setDept(dept);
 
-            // Lấy danh sách sản phẩm từ request
-            String[] pids = req.getParameterValues("pid");
-            if (pids != null) {
-                for (String pid : pids) {
-                    PlanCampain c = new PlanCampain();
+        ArrayList<PlanCampain> campains = new ArrayList<>();
+        for (String key : req.getParameterMap().keySet()) {
+            if (key.startsWith("quantity")) {
+                int productId = Integer.parseInt(key.replace("quantity", ""));
+                int quantity = Integer.parseInt(req.getParameter(key));
+                float cost = Float.parseFloat(req.getParameter("cost" + productId));
+                int campainId = Integer.parseInt(req.getParameter("campainId" + productId));
 
-                    Product p = new Product();
-                    p.setId(Integer.parseInt(pid));
-                    c.setProduct(p);
-                    c.setPlan(plan);
+                PlanCampain campain = new PlanCampain();
+                campain.setId(campainId);
+                campain.setQuantity(quantity);
+                campain.setCost(cost);
 
-                    // Lấy số lượng và chi phí từ request
-                    String raw_quantity = req.getParameter("quantity" + pid);
-                    String raw_cost = req.getParameter("cost" + pid);
+                Product product = new Product();
+                product.setId(productId);
+                campain.setProduct(product);
 
-                    c.setQuantity(raw_quantity != null && raw_quantity.length() > 0 ? Integer.parseInt(raw_quantity) : 0);
-                    c.setCost(raw_cost != null && raw_cost.length() > 0 ? Float.parseFloat(raw_cost) : 0);
-
-                    // Chỉ thêm vào danh sách khi số lượng và chi phí lớn hơn 0
-                    if (c.getQuantity() > 0 && c.getCost() > 0) {
-                        plan.getCampains().add(c);
-                    }
-                }
+                campains.add(campain);
             }
-
-            // Kiểm tra nếu plan có chiến dịch (campains) thì thực hiện cập nhật
-            if (plan.getCampains().size() > 0) {
-                PlanDBContext db = new PlanDBContext();
-                db.update(plan); // Sửa thành cập nhật thay vì insert mới
-                resp.getWriter().println("Your plan has been updated!");
-            } else {
-                resp.getWriter().println("Your plan does not have any products / campaigns.");
-            }
-        } catch (NumberFormatException e) {
-            resp.getWriter().println("Invalid input format. Please check your data.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp.getWriter().println("An error occurred while updating the plan. Please try again.");
         }
+        plan.setCampains(campains);
+
+        PlanDBContext db = new PlanDBContext();
+        db.update(plan);
+
+        resp.getWriter().println("Update successful");
+    }
+
+    // Helper method to generate list of dates from start to end
+    private List<Date> getDateList(Date start, Date end) {
+        List<Date> dateList = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(start);
+        
+        while (!calendar.getTime().after(end)) {
+            dateList.add(new Date(calendar.getTimeInMillis()));
+            calendar.add(Calendar.DATE, 1);
+        }
+        
+        return dateList;
     }
 }

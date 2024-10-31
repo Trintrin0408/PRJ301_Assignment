@@ -60,7 +60,7 @@ body {
 .options {
     display: flex;
     justify-content: space-between;
-    color: #fff;
+    color: #red;
     font-size: 14px;
 }
 

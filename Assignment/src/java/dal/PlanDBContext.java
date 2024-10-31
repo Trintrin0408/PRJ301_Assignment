@@ -32,19 +32,19 @@ public class PlanDBContext extends DBContext<Plan> {
             connection.setAutoCommit(false);
 
             String sql_insert_plan = "INSERT INTO [dbo].[Plan]\n"
-                    + "           ([PlanID]\n"
-                    + "           ,[PlanName]\n"
+                    + "           ([PlanName]\n"
                     + "           ,[StartDate]\n"
                     + "           ,[EndDate]\n"
                     + "           ,[DepartmentID]\n"
-                    + "           ,[Status])\n"
+                    + "           ,[Status]\n"
+                    + "           ,[deleted])\n"
                     + "     VALUES\n"
                     + "           (?\n"
                     + "           ,?\n"
                     + "           ,?\n"
                     + "           ,?\n"
                     + "           ,?\n"
-                    + "           ,?)";
+                    + "           ,0)";
             PreparedStatement stm_insert_plan = connection.prepareStatement(sql_insert_plan);
             stm_insert_plan.setString(1, entity.getName());
             stm_insert_plan.setDate(2, entity.getStart());
@@ -103,9 +103,58 @@ public class PlanDBContext extends DBContext<Plan> {
 
     }
 
-    @Override
     public void update(Plan entity) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        PreparedStatement stm_update_plan = null;
+        PreparedStatement stm_update_campain = null;
+
+        try {
+            connection.setAutoCommit(false);
+
+            // Update Plan
+            String sql_update_plan = "UPDATE [dbo].[Plan] SET [PlanName] = ?, [StartDate] = ?, [EndDate] = ?, [DepartmentID] = ? WHERE [PlanID] = ?";
+            stm_update_plan = connection.prepareStatement(sql_update_plan);
+            stm_update_plan.setString(1, entity.getName());
+            stm_update_plan.setDate(2, entity.getStart());
+            stm_update_plan.setDate(3, entity.getEnd());
+            stm_update_plan.setInt(4, entity.getDept().getId());
+            stm_update_plan.setInt(5, entity.getId());
+            stm_update_plan.executeUpdate();
+
+            // Update PlanCampaign
+            String sql_update_campain = "UPDATE [dbo].[PlanCampain] SET [Quantity] = ?, [Estimate] = ? WHERE [PlanCampnID] = ?";
+            stm_update_campain = connection.prepareStatement(sql_update_campain);
+
+            for (PlanCampain campain : entity.getCampains()) {
+                stm_update_campain.setInt(1, campain.getQuantity());
+                stm_update_campain.setFloat(2, campain.getCost());
+                stm_update_campain.setInt(3, campain.getId());
+                stm_update_campain.executeUpdate();
+            }
+
+            connection.commit();
+        } catch (SQLException ex) {
+            Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                connection.rollback();
+            } catch (SQLException ex1) {
+                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+                if (stm_update_plan != null) {
+                    stm_update_plan.close();
+                }
+                if (stm_update_campain != null) {
+                    stm_update_campain.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override
@@ -301,75 +350,89 @@ public class PlanDBContext extends DBContext<Plan> {
 
     }
 
-    @Override
-    public Plan get(int id) {
-        Plan plan = null;
-        PreparedStatement command = null;
-        ArrayList<PlanCampain> campains = new ArrayList<>();
-        try {
-            String sql = "SELECT [dbo].[Plan].[PlanID], [PlanName], [StartDate], [EndDate], "
-                    + "[dbo].[Department].[DepartmentID], [Status], [PlanCampnID], "
-                    + "[dbo].[PlanCampain].[ProductID], [ProductName], [dbo].[PlanCampain].Quantity, [DepartmentName] "
-                    + "FROM [dbo].[Plan] "
-                    + "JOIN [dbo].[PlanCampain] ON [dbo].[Plan].[PlanID] = [dbo].[PlanCampain].[PlanID] "
-                    + "JOIN [dbo].[Product] ON [dbo].[Product].ProductID = [dbo].[PlanCampain].ProductID "
-                    + "JOIN [dbo].[Department] ON [dbo].[Department].DepartmentID = [dbo].[Plan].DepartmentID "
-                    + "WHERE [dbo].[Plan].[PlanID] = ?";
+@Override
+public Plan get(int id) {
+    Plan plan = null;
+    PreparedStatement command = null;
+    ArrayList<PlanCampain> campains = new ArrayList<>();
+    
+    try {
+        String sql = "SELECT [dbo].[Plan].[PlanID], [PlanName], [StartDate], [EndDate], "
+                + "[dbo].[Department].[DepartmentID], [DepartmentName], [Status], "
+                + "[dbo].[PlanCampain].[PlanCampnID], [dbo].[PlanCampain].[ProductID], "
+                + "[ProductName], [dbo].[PlanCampain].Quantity AS PlanCampainQuantity, "
+                + "[dbo].[SchedualCampaign].[ScID], [dbo].[SchedualCampaign].Quantity AS SchedualCampaignQuantity, "
+                + "[dbo].[SchedualCampaign].[Date], [dbo].[SchedualCampaign].[Shift] "
+                + "FROM [dbo].[Plan] "
+                + "JOIN [dbo].[PlanCampain] ON [dbo].[Plan].[PlanID] = [dbo].[PlanCampain].[PlanID] "
+                + "JOIN [dbo].[Product] ON [dbo].[Product].ProductID = [dbo].[PlanCampain].ProductID "
+                + "JOIN [dbo].[Department] ON [dbo].[Department].DepartmentID = [dbo].[Plan].DepartmentID "
+                + "JOIN [dbo].[SchedualCampaign] ON [dbo].[SchedualCampaign].PlanCampnID = [dbo].[PlanCampain].PlanCampnID "
+                + "WHERE [dbo].[Plan].[PlanID] = ?";
 
-            command = connection.prepareStatement(sql);
-            command.setInt(1, id);
-            ResultSet rs = command.executeQuery();
+        command = connection.prepareStatement(sql);
+        command.setInt(1, id);
+        ResultSet rs = command.executeQuery();
 
-            while (rs.next()) {
-                if (plan == null) {
-                    plan = new Plan();
-                    plan.setId(rs.getInt("PlanID"));
-                    plan.setName(rs.getNString("PlanName"));
-                    plan.setStart(rs.getDate("StartDate"));
-                    plan.setEnd(rs.getDate("EndDate"));
-                    plan.setStatus(rs.getString("Status"));
+        while (rs.next()) {
+            if (plan == null) {
+                plan = new Plan();
+                plan.setId(rs.getInt("PlanID"));
+                plan.setName(rs.getNString("PlanName"));
+                plan.setStart(rs.getDate("StartDate"));
+                plan.setEnd(rs.getDate("EndDate"));
+                plan.setStatus(rs.getString("Status"));
 
-                    // Gán Department vào Plan
-                    Department dept = new Department();
-                    dept.setId(rs.getInt("DepartmentID"));
-                    dept.setName(rs.getNString("DepartmentName"));
-                    plan.setDept(dept);
-                }
+                Department dept = new Department();
+                dept.setId(rs.getInt("DepartmentID"));
+                dept.setName(rs.getNString("DepartmentName"));
+                plan.setDept(dept);
+            }
 
-                // Tạo PlanCampain mới và thêm vào danh sách campains
-                PlanCampain planCampain = new PlanCampain();
-                planCampain.setId(rs.getInt("PlanCampnID"));
-                planCampain.setQuantity(rs.getInt("Quantity"));
+            int planCampainId = rs.getInt("PlanCampnID");
+            PlanCampain planCampain = campains.stream()
+                    .filter(pc -> pc.getId() == planCampainId)
+                    .findFirst()
+                    .orElse(null);
 
-                // Tạo đối tượng Product và thiết lập các thuộc tính
+            if (planCampain == null) {
+                planCampain = new PlanCampain();
+                planCampain.setId(planCampainId);
+                planCampain.setQuantity(rs.getInt("PlanCampainQuantity"));
+
                 Product product = new Product();
                 product.setId(rs.getInt("ProductID"));
                 product.setName(rs.getNString("ProductName"));
-
-                // Gán Product vào PlanCampain
                 planCampain.setProduct(product);
 
-                // Gán Plan vào PlanCampain
                 planCampain.setPlan(plan);
-
-                // Thêm PlanCampain vào danh sách của Plan
                 campains.add(planCampain);
             }
-            if (plan != null) {
-                plan.setCampains(campains);
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            if (command != null) {
-                try {
-                    command.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+
+            SchedualCampain schedualCampain = new SchedualCampain();
+            schedualCampain.setId(rs.getInt("ScID"));
+            schedualCampain.setDate(rs.getDate("Date"));
+            schedualCampain.setShift(rs.getString("Shift"));
+            schedualCampain.setQuantity(rs.getInt("SchedualCampaignQuantity"));
+            planCampain.getSchedualCampains().add(schedualCampain);
+        }
+
+        if (plan != null) {
+            plan.setCampains(campains);
+        }
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+    } finally {
+        if (command != null) {
+            try {
+                command.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         }
-        return plan;
     }
+    return plan;
+}
+
 
 }

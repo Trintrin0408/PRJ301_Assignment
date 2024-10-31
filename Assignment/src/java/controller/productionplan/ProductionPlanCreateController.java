@@ -141,6 +141,7 @@ public class ProductionPlanCreateController extends BaseRBACController {
         }
 
         PlanDBContext db = new PlanDBContext();
+        System.out.println("this is creation:" +plan);
         db.insert(plan);
         req.setAttribute("successMessage", "Your plan has been added successfully!");
         doAuthorizedGet(req, resp, account);
